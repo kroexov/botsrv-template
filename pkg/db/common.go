@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/go-pg/pg/v10"
-	"github.com/go-pg/pg/v10/orm"
+	"github.com/go-pg/pg/v9"
+	"github.com/go-pg/pg/v9/orm"
 )
 
 type CommonRepo struct {
@@ -23,10 +23,12 @@ func NewCommonRepo(db orm.DB) CommonRepo {
 			Tables.User.Name: {StatusFilter},
 		},
 		sort: map[string][]SortField{
-			Tables.User.Name: {{Column: Columns.User.CreatedAt, Direction: SortDesc}},
+			Tables.User.Name:  {{Column: Columns.User.CreatedAt, Direction: SortDesc}},
+			Tables.Place.Name: {{Column: Columns.Place.ID, Direction: SortDesc}},
 		},
 		join: map[string][]string{
-			Tables.User.Name: {TableColumns},
+			Tables.User.Name:  {TableColumns},
+			Tables.Place.Name: {TableColumns, Columns.Place.User},
 		},
 	}
 }
@@ -108,7 +110,7 @@ func (cr CommonRepo) AddUser(ctx context.Context, user *User, ops ...OpFunc) (*U
 func (cr CommonRepo) UpdateUser(ctx context.Context, user *User, ops ...OpFunc) (bool, error) {
 	q := cr.db.ModelContext(ctx, user).WherePK()
 	if len(ops) == 0 {
-		q = q.ExcludeColumn(Columns.User.CreatedAt)
+		q = q.ExcludeColumn(Columns.User.ID, Columns.User.CreatedAt)
 	}
 	applyOps(q, ops...)
 	res, err := q.Update()
@@ -124,4 +126,82 @@ func (cr CommonRepo) DeleteUser(ctx context.Context, id int) (deleted bool, err 
 	user := &User{ID: id, StatusID: StatusDeleted}
 
 	return cr.UpdateUser(ctx, user, WithColumns(Columns.User.StatusID))
+}
+
+/*** Place ***/
+
+// FullPlace returns full joins with all columns
+func (cr CommonRepo) FullPlace() OpFunc {
+	return WithColumns(cr.join[Tables.Place.Name]...)
+}
+
+// DefaultPlaceSort returns default sort.
+func (cr CommonRepo) DefaultPlaceSort() OpFunc {
+	return WithSort(cr.sort[Tables.Place.Name]...)
+}
+
+// PlaceByID is a function that returns Place by ID(s) or nil.
+func (cr CommonRepo) PlaceByID(ctx context.Context, id int, ops ...OpFunc) (*Place, error) {
+	return cr.OnePlace(ctx, &PlaceSearch{ID: &id}, ops...)
+}
+
+// OnePlace is a function that returns one Place by filters. It could return pg.ErrMultiRows.
+func (cr CommonRepo) OnePlace(ctx context.Context, search *PlaceSearch, ops ...OpFunc) (*Place, error) {
+	obj := &Place{}
+	err := buildQuery(ctx, cr.db, obj, search, cr.filters[Tables.Place.Name], PagerTwo, ops...).Select()
+
+	if errors.Is(err, pg.ErrMultiRows) {
+		return nil, err
+	} else if errors.Is(err, pg.ErrNoRows) {
+		return nil, nil
+	}
+
+	return obj, err
+}
+
+// PlacesByFilters returns Place list.
+func (cr CommonRepo) PlacesByFilters(ctx context.Context, search *PlaceSearch, pager Pager, ops ...OpFunc) (places []Place, err error) {
+	err = buildQuery(ctx, cr.db, &places, search, cr.filters[Tables.Place.Name], pager, ops...).Select()
+	return
+}
+
+// CountPlaces returns count
+func (cr CommonRepo) CountPlaces(ctx context.Context, search *PlaceSearch, ops ...OpFunc) (int, error) {
+	return buildQuery(ctx, cr.db, &Place{}, search, cr.filters[Tables.Place.Name], PagerOne, ops...).Count()
+}
+
+// AddPlace adds Place to DB.
+func (cr CommonRepo) AddPlace(ctx context.Context, place *Place, ops ...OpFunc) (*Place, error) {
+	q := cr.db.ModelContext(ctx, place)
+	applyOps(q, ops...)
+	_, err := q.Insert()
+
+	return place, err
+}
+
+// UpdatePlace updates Place in DB.
+func (cr CommonRepo) UpdatePlace(ctx context.Context, place *Place, ops ...OpFunc) (bool, error) {
+	q := cr.db.ModelContext(ctx, place).WherePK()
+	if len(ops) == 0 {
+		q = q.ExcludeColumn(Columns.Place.ID)
+	}
+	applyOps(q, ops...)
+	res, err := q.Update()
+	if err != nil {
+		return false, err
+	}
+
+	return res.RowsAffected() > 0, err
+}
+
+// DeletePlace deletes Place from DB.
+func (cr CommonRepo) DeletePlace(ctx context.Context, id int) (deleted bool, err error) {
+	place := &Place{ID: id}
+
+	res, err := cr.db.ModelContext(ctx, place).WherePK().Delete()
+	if err != nil {
+		return false, err
+	}
+
+	return res.RowsAffected() > 0, err
 }
