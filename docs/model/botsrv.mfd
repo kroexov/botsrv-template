@@ -1,0 +1,11 @@
+<Project xmlns:xsi="" xmlns:xsd="">
+    <Name>botsrv.mfd</Name>
+    <PackageNames>
+        <string>common</string>
+    </PackageNames>
+    <Languages>
+        <string>en</string>
+    </Languages>
+    <GoPGVer>9</GoPGVer>
+    <CustomTypes></CustomTypes>
+</Project>
