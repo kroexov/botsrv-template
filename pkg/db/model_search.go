@@ -107,6 +107,7 @@ type PlaceSearch struct {
 	PlaceName      *string
 	PlacePriority  *int
 	UserID         *int
+	CreatedAt      *time.Time
 	IDs            []int
 	PlaceNameILike *string
 }
@@ -126,6 +127,9 @@ func (ps *PlaceSearch) Apply(query *orm.Query) *orm.Query {
 	}
 	if ps.UserID != nil {
 		ps.where(query, Tables.Place.Alias, Columns.Place.UserID, ps.UserID)
+	}
+	if ps.CreatedAt != nil {
+		ps.where(query, Tables.Place.Alias, Columns.Place.CreatedAt, ps.CreatedAt)
 	}
 	if len(ps.IDs) > 0 {
 		Filter{Columns.Place.ID, ps.IDs, SearchTypeArray, false}.Apply(query)

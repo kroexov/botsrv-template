@@ -13,7 +13,7 @@ var Columns = struct {
 		ID, Nickname, CreatedAt, StatusID string
 	}
 	Place struct {
-		ID, PlaceName, PlacePriority, UserID string
+		ID, PlaceName, PlacePriority, UserID, CreatedAt string
 
 		User string
 	}
@@ -27,7 +27,7 @@ var Columns = struct {
 		StatusID:  "statusId",
 	},
 	Place: struct {
-		ID, PlaceName, PlacePriority, UserID string
+		ID, PlaceName, PlacePriority, UserID, CreatedAt string
 
 		User string
 	}{
@@ -35,6 +35,7 @@ var Columns = struct {
 		PlaceName:     "placeName",
 		PlacePriority: "placePriority",
 		UserID:        "userId",
+		CreatedAt:     "createdAt",
 
 		User: "User",
 	},
@@ -74,10 +75,11 @@ type User struct {
 type Place struct {
 	tableName struct{} `pg:"places,alias:t,discard_unknown_columns"`
 
-	ID            int    `pg:"placeId,pk"`
-	PlaceName     string `pg:"placeName,use_zero"`
-	PlacePriority int    `pg:"placePriority,use_zero"`
-	UserID        *int   `pg:"userId"`
+	ID            int       `pg:"placeId,pk"`
+	PlaceName     string    `pg:"placeName,use_zero"`
+	PlacePriority int       `pg:"placePriority,use_zero"`
+	UserID        *int      `pg:"userId"`
+	CreatedAt     time.Time `pg:"createdAt,use_zero"`
 
 	User *User `pg:"fk:userId,rel:has-one"`
 }

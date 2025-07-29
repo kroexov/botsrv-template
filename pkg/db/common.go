@@ -24,7 +24,7 @@ func NewCommonRepo(db orm.DB) CommonRepo {
 		},
 		sort: map[string][]SortField{
 			Tables.User.Name:  {{Column: Columns.User.CreatedAt, Direction: SortDesc}},
-			Tables.Place.Name: {{Column: Columns.Place.ID, Direction: SortDesc}},
+			Tables.Place.Name: {{Column: Columns.Place.CreatedAt, Direction: SortDesc}},
 		},
 		join: map[string][]string{
 			Tables.User.Name:  {TableColumns},
@@ -173,6 +173,9 @@ func (cr CommonRepo) CountPlaces(ctx context.Context, search *PlaceSearch, ops .
 // AddPlace adds Place to DB.
 func (cr CommonRepo) AddPlace(ctx context.Context, place *Place, ops ...OpFunc) (*Place, error) {
 	q := cr.db.ModelContext(ctx, place)
+	if len(ops) == 0 {
+		q = q.ExcludeColumn(Columns.Place.CreatedAt)
+	}
 	applyOps(q, ops...)
 	_, err := q.Insert()
 
@@ -183,7 +186,7 @@ func (cr CommonRepo) AddPlace(ctx context.Context, place *Place, ops ...OpFunc) 
 func (cr CommonRepo) UpdatePlace(ctx context.Context, place *Place, ops ...OpFunc) (bool, error) {
 	q := cr.db.ModelContext(ctx, place).WherePK()
 	if len(ops) == 0 {
-		q = q.ExcludeColumn(Columns.Place.ID)
+		q = q.ExcludeColumn(Columns.Place.ID, Columns.Place.CreatedAt)
 	}
 	applyOps(q, ops...)
 	res, err := q.Update()
