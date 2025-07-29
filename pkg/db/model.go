@@ -79,5 +79,5 @@ type Place struct {
 	PlacePriority int    `pg:"placePriority,use_zero"`
 	UserID        *int   `pg:"userId"`
 
-	User *User `pg:"fk:userId"`
+	User *User `pg:"fk:userId,rel:has-one"`
 }
