@@ -2,35 +2,27 @@ package app
 
 import (
 	"context"
+	"github.com/go-telegram/bot"
+	"gold-botsrv/pkg/botsrv"
 	"time"
 
-	"apisrv/pkg/db"
-	"apisrv/pkg/vt"
+	"gold-botsrv/pkg/db"
 
 	"github.com/go-pg/pg/v10"
 	monitor "github.com/hypnoglow/go-pg-monitor"
 	"github.com/labstack/echo/v4"
 	"github.com/vmkteam/appkit"
 	"github.com/vmkteam/embedlog"
-	"github.com/vmkteam/rpcgen/v2"
-	"github.com/vmkteam/rpcgen/v2/typescript"
-	"github.com/vmkteam/vfs"
-	"github.com/vmkteam/zenrpc/v2"
 )
 
 type Config struct {
 	Database *pg.Options
 	Server   struct {
-		Host      string
-		Port      int
-		IsDevel   bool
-		EnableVFS bool
+		Host    string
+		Port    int
+		IsDevel bool
 	}
-	Sentry struct {
-		Environment string
-		DSN         string
-	}
-	VFS vfs.Config
+	Bot botsrv.Config
 }
 
 type App struct {
@@ -41,7 +33,9 @@ type App struct {
 	dbc     *pg.DB
 	mon     *monitor.Monitor
 	echo    *echo.Echo
-	vtsrv   zenrpc.Server
+
+	b  *bot.Bot
+	bm *botsrv.BotManager
 }
 
 func New(appName string, sl embedlog.Logger, cfg Config, db db.DB, dbc *pg.DB) *App {
@@ -54,8 +48,15 @@ func New(appName string, sl embedlog.Logger, cfg Config, db db.DB, dbc *pg.DB) *
 		Logger:  sl,
 	}
 
-	// add services
-	a.vtsrv = vt.New(a.db, a.Logger, a.cfg.Server.IsDevel)
+	// add services and managers
+	a.bm = botsrv.NewBotManager(a.Logger, a.db)
+
+	opts := []bot.Option{bot.WithDefaultHandler(a.bm.DefaultHandler)}
+	b, err := bot.New(cfg.Bot.Token, opts...)
+	if err != nil {
+		panic(err)
+	}
+	a.b = b
 
 	return a
 }
@@ -65,18 +66,13 @@ func (a *App) Run(ctx context.Context) error {
 	a.registerMetrics()
 	a.registerHandlers()
 	a.registerDebugHandlers()
-	a.registerAPIHandlers()
-	a.registerVTApiHandlers()
 	a.registerMetadata()
+	a.bm.RegisterBotHandlers(a.b)
+
+	// start tg bot
+	go a.b.Start(context.TODO())
 
 	return a.runHTTPServer(ctx, a.cfg.Server.Host, a.cfg.Server.Port)
-}
-
-// VTTypeScriptClient returns TypeScript client for VT.
-func (a *App) VTTypeScriptClient() ([]byte, error) {
-	gen := rpcgen.FromSMD(a.vtsrv.SMD())
-	tsSettings := typescript.Settings{ExcludedNamespace: []string{NSVFS}, WithClasses: true}
-	return gen.TSCustomClient(tsSettings).Generate()
 }
 
 // Shutdown is a function that gracefully stops HTTP server.

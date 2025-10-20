@@ -1,3 +1,5 @@
+NAME := gold-botsrv
+
 -include Makefile.mk
 
 GOFLAGS=-mod=vendor

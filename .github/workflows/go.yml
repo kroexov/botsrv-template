@@ -10,15 +10,15 @@ env:
   PGUSER: postgres
   PGHOST: localhost
   PGPASSWORD: postgres
-  PGDATABASE: test-apisrv
-  NAME: apisrv
+  PGDATABASE: test-gold-botsrv
+  NAME: gold-botsrv
 
 jobs:
 
   test:
     runs-on: ubuntu-latest
     env:
-      TEST_PGDATABASE: test-apisrv
+      TEST_PGDATABASE: test-gold-botsrv
     services:
       postgres:
         image: postgres
@@ -26,7 +26,7 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test-apisrv
+          POSTGRES_DB: test-gold-botsrv
         options: >-
           --health-cmd pg_isready
           --health-interval 10s

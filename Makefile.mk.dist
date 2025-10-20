@@ -1,10 +1,10 @@
 # project service name
-NAME := apisrv
+NAME := gold-botsrv
 
 # local database connection settings
-TEST_PGDATABASE ?= test-apisrv
+TEST_PGDATABASE ?= test-gold-botsrv
 
-PGDATABASE ?= apisrv
+PGDATABASE ?= gold-botsrv
 PGHOST ?= localhost
 PGPORT ?= 5432
 PGUSER ?= postgres

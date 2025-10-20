@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-ARG CI_PROJECT_NAME=apisrv
+ARG CI_PROJECT_NAME=gold-botsrv
 ENV CI_PROJECT_NAME=$CI_PROJECT_NAME
 
 RUN apk --no-cache add ca-certificates tzdata

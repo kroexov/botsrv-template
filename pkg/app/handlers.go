@@ -6,22 +6,16 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
-	"apisrv/pkg/rpc"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/vmkteam/appkit"
-	"github.com/vmkteam/rpcgen/v2"
-	"github.com/vmkteam/rpcgen/v2/typescript"
-	zm "github.com/vmkteam/zenrpc-middleware"
-	"github.com/vmkteam/zenrpc/v2"
 )
 
 // runHTTPServer is a function that starts http listener using labstack/echo.
 func (a *App) runHTTPServer(ctx context.Context, host string, port int) error {
 	listenAddress := fmt.Sprintf("%s:%d", host, port)
 	addr := "http://" + listenAddress
-	a.Print(ctx, "starting http listener", "url", addr, "smdbox", addr+"/v1/rpc/doc/")
+	a.Print(ctx, "starting http listener", "url", addr)
 
 	return a.echo.Start(listenAddress)
 }
@@ -57,25 +51,4 @@ func (a *App) registerDebugHandlers() {
 	if a.cfg.Server.IsDevel {
 		a.echo.GET("/", appkit.RenderRoutes(a.appName, a.echo))
 	}
-}
-
-// registerAPIHandlers registers main rpc server.
-func (a *App) registerAPIHandlers() {
-	srv := rpc.New(a.db, a.Logger, a.cfg.Server.IsDevel)
-	gen := rpcgen.FromSMD(srv.SMD())
-
-	a.echo.Any("/v1/rpc/", zm.EchoHandler(zm.XRequestID(srv)))
-	a.echo.Any("/v1/rpc/doc/", appkit.EchoHandlerFunc(zenrpc.SMDBoxHandler))
-	a.echo.Any("/v1/rpc/openrpc.json", appkit.EchoHandlerFunc(rpcgen.Handler(gen.OpenRPC("apisrv", "http://localhost:8075/v1/rpc"))))
-	a.echo.Any("/v1/rpc/api.ts", appkit.EchoHandlerFunc(rpcgen.Handler(gen.TSClient(nil))))
-}
-
-// registerVTApiHandlers registers vt rpc server.
-func (a *App) registerVTApiHandlers() {
-	gen := rpcgen.FromSMD(a.vtsrv.SMD())
-	tsSettings := typescript.Settings{ExcludedNamespace: []string{NSVFS}, WithClasses: true}
-
-	a.echo.Any("/v1/vt/", zm.EchoHandler(zm.XRequestID(a.vtsrv)))
-	a.echo.Any("/v1/vt/doc/", appkit.EchoHandlerFunc(zenrpc.SMDBoxHandler))
-	a.echo.Any("/v1/vt/api.ts", appkit.EchoHandlerFunc(rpcgen.Handler(gen.TSCustomClient(tsSettings))))
 }
