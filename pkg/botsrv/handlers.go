@@ -2,12 +2,13 @@ package botsrv
 
 import (
 	"context"
-	"fmt"
+	"sync"
+
+	"gold-botsrv/pkg/db"
+
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 	"github.com/vmkteam/embedlog"
-	"gold-botsrv/pkg/db"
-	"sync"
 )
 
 const (
@@ -56,8 +57,6 @@ func (bm *BotManager) DefaultHandler(ctx context.Context, b *bot.Bot, update *mo
 		bm.Errorf("%v", err)
 		return
 	}
-
-	return
 }
 
 // answerInlineQuery is a function to handle all inline bot calls
@@ -69,7 +68,7 @@ func (bm *BotManager) answerInlineQuery(ctx context.Context, b *bot.Bot, update 
 				ID:    "1",
 				Title: "Nothing!",
 				InputMessageContent: &models.InputTextMessageContent{
-					MessageText: fmt.Sprintf("Default inline query answer"),
+					MessageText: "Default inline query answer",
 				},
 				ReplyMarkup:  nil,
 				ThumbnailURL: "https://img.freepik.com/premium-vector/vector-loading-icon-vector-editable-element-design_898898-180.jpg",
@@ -95,10 +94,9 @@ func (bm *BotManager) StartHandler(ctx context.Context, b *bot.Bot, update *mode
 		bm.Errorf("%v", err)
 		return
 	}
-
-	return
 }
 
+// nolint:unused
 func pointer[T any](in T) *T {
 	return &in
 }

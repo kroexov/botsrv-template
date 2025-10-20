@@ -2,13 +2,13 @@ package app
 
 import (
 	"context"
-	"github.com/go-telegram/bot"
-	"gold-botsrv/pkg/botsrv"
 	"time"
 
+	"gold-botsrv/pkg/botsrv"
 	"gold-botsrv/pkg/db"
 
 	"github.com/go-pg/pg/v10"
+	"github.com/go-telegram/bot"
 	monitor "github.com/hypnoglow/go-pg-monitor"
 	"github.com/labstack/echo/v4"
 	"github.com/vmkteam/appkit"

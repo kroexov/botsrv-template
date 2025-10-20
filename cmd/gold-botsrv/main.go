@@ -101,7 +101,7 @@ func main() {
 // exitOnError calls log.Fatal if err wasn't nil.
 func exitOnError(err error) {
 	if err != nil {
-		//nolint:sloglint
+		//nolint:sloglint,noctx
 		slog.Error(err.Error())
 		os.Exit(1)
 	}
