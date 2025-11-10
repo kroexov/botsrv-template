@@ -1,0 +1,30 @@
+<Package xmlns:xsi="" xmlns:xsd="">
+    <Name>timetables</Name>
+    <Entities>
+        <Entity Name="Task" Namespace="timetables" Table="tasks">
+            <Attributes>
+                <Attribute Name="ID" DBName="taskId" DBType="int4" GoType="int" PK="true" Nullable="Yes" Addable="true" Updatable="false" Min="0" Max="0"></Attribute>
+                <Attribute Name="UserTgID" DBName="userTgId" DBType="int8" GoType="*int" PK="false" FK="User" Nullable="Yes" Addable="true" Updatable="true" Min="0" Max="0"></Attribute>
+                <Attribute Name="Priority" DBName="priority" DBType="int4" GoType="int" PK="false" Nullable="No" Addable="true" Updatable="true" Min="0" Max="0"></Attribute>
+                <Attribute Name="Length" DBName="length" DBType="int4" GoType="int" PK="false" Nullable="No" Addable="true" Updatable="true" Min="0" Max="0"></Attribute>
+                <Attribute Name="Deadline" DBName="deadline" DBType="timestamptz" GoType="time.Time" PK="false" Nullable="No" Addable="true" Updatable="true" Min="0" Max="0"></Attribute>
+                <Attribute Name="CreatedAt" DBName="createdAt" DBType="timestamptz" GoType="time.Time" PK="false" Nullable="No" Addable="false" Updatable="false" Min="0" Max="0"></Attribute>
+                <Attribute Name="StartAt" DBName="startAt" DBType="timestamptz" GoType="*time.Time" PK="false" Nullable="Yes" Addable="true" Updatable="true" Min="0" Max="0"></Attribute>
+                <Attribute Name="StatusID" DBName="statusId" DBType="int4" GoType="int" PK="false" Nullable="No" Addable="true" Updatable="true" Min="0" Max="0"></Attribute>
+            </Attributes>
+            <Searches>
+                <Search Name="IDs" AttrName="ID" SearchType="SEARCHTYPE_ARRAY"></Search>
+            </Searches>
+        </Entity>
+        <Entity Name="User" Namespace="timetables" Table="users">
+            <Attributes>
+                <Attribute Name="ID" DBName="tgId" DBType="int8" GoType="int" PK="true" Nullable="Yes" Addable="true" Updatable="false" Min="0" Max="0"></Attribute>
+                <Attribute Name="TimeSlots" DBName="timeSlots" DBType="jsonb" GoType="UserTimeSlots" PK="false" Nullable="No" Addable="true" Updatable="true" Min="0" Max="0"></Attribute>
+                <Attribute Name="StatusID" DBName="statusId" DBType="int4" GoType="int" PK="false" Nullable="No" Addable="true" Updatable="true" Min="0" Max="0"></Attribute>
+            </Attributes>
+            <Searches>
+                <Search Name="IDs" AttrName="ID" SearchType="SEARCHTYPE_ARRAY"></Search>
+            </Searches>
+        </Entity>
+    </Entities>
+</Package>
