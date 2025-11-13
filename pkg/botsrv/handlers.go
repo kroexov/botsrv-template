@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"gold-botsrv/pkg/db"
 
@@ -19,6 +20,7 @@ import (
 const (
 	startCommand    = "/start"
 	tasksCommand    = "/tasks"
+	addTaskCommand  = "/add_task"
 	generateCommand = "/generate"
 	settingsCommand = "/settings"
 
@@ -65,6 +67,7 @@ func NewBotManager(logger embedlog.Logger, dbo db.DB) *BotManager {
 func (bm *BotManager) RegisterBotHandlers(b *bot.Bot) {
 	b.RegisterHandler(bot.HandlerTypeMessageText, startCommand, bot.MatchTypePrefix, bm.StartHandler)
 	b.RegisterHandler(bot.HandlerTypeMessageText, tasksCommand, bot.MatchTypePrefix, bm.TasksHandler)
+	b.RegisterHandler(bot.HandlerTypeMessageText, addTaskCommand, bot.MatchTypePrefix, bm.AddTaskHandler)
 	b.RegisterHandler(bot.HandlerTypeMessageText, generateCommand, bot.MatchTypePrefix, bm.GenerateHandler)
 	b.RegisterHandler(bot.HandlerTypeMessageText, settingsCommand, bot.MatchTypePrefix, bm.SettingsHandler)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, callbackReturnToDays, bot.MatchTypePrefix, bm.ReturnToDaysHandler)
@@ -77,7 +80,44 @@ func (bm *BotManager) DefaultHandler(ctx context.Context, b *bot.Bot, update *mo
 	if update.Message == nil {
 		return
 	}
-	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
+
+	user, err := bm.cr.UserByID(ctx, int(update.Message.From.ID))
+	if err != nil {
+		bm.Errorf("%v", err)
+		return
+	}
+
+	if user != nil && user.StatusID == db.StatusWaitTask {
+		task, err := ParseTaskFromText(update.Message.Text, int(update.Message.From.ID))
+		if err != nil {
+			b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID: update.Message.Chat.ID,
+				Text:   err.Error(),
+			})
+			return
+		}
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: update.Message.Chat.ID,
+			Text:   "успех",
+		})
+		_, err = bm.cr.AddTask(ctx, task)
+		if err != nil {
+			bm.Errorf("%v", err)
+			return
+		}
+		_, err = bm.cr.UpdateUser(ctx, &db.User{
+			ID:       int(update.Message.From.ID),
+			StatusID: db.StatusEnabled,
+		}, db.WithColumns(db.Columns.User.StatusID))
+		if err != nil {
+			bm.Errorf("%v", err)
+			return
+		}
+
+		return
+	}
+
+	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
 		Text:   "Default bot answer",
 	})
@@ -87,15 +127,87 @@ func (bm *BotManager) DefaultHandler(ctx context.Context, b *bot.Bot, update *mo
 	}
 }
 
+// ParseTaskFromText парсит текст в структуру Task
+func ParseTaskFromText(text string, userTgID int) (*db.Task, error) {
+	lines := strings.Split(strings.TrimSpace(text), "\n")
+
+	// Должно быть 4 строки: описание, дата, длительность, приоритет
+	if len(lines) < 4 {
+		return nil, fmt.Errorf("неверный формат. Ожидается 4 строки, получено %d", len(lines))
+	}
+
+	task := &db.Task{
+		UserTgID: &userTgID,
+		StatusID: db.StatusEnabled,
+	}
+
+	// Парсим описание (первая строка)
+	//task.Description = strings.TrimSpace(lines[0])
+	//if task.Description == "" {
+	//	return nil, fmt.Errorf("описание не может быть пустым")
+	//}
+
+	// Парсим дату дедлайна (вторая строка)
+	deadline, err := time.Parse("02.01.2006", strings.TrimSpace(lines[1]))
+	if err != nil {
+		return nil, fmt.Errorf("неверный формат даты. Ожидается DD.MM.YYYY: %w", err)
+	}
+	task.Deadline = deadline
+
+	// Парсим длительность (третья строка)
+	length, err := strconv.Atoi(strings.TrimSpace(lines[2]))
+	if err != nil {
+		return nil, fmt.Errorf("неверный формат длительности. Ожидается число минут: %w", err)
+	}
+	if length <= 0 {
+		return nil, fmt.Errorf("длительность должна быть положительным числом")
+	}
+	task.Length = length
+
+	// Парсим приоритет (четвертая строка)
+	priority, err := strconv.Atoi(strings.TrimSpace(lines[3]))
+	if err != nil {
+		return nil, fmt.Errorf("неверный формат приоритета. Ожидается число 1-10: %w", err)
+	}
+	if priority < 1 || priority > 10 {
+		return nil, fmt.Errorf("приоритет должен быть от 1 до 10")
+	}
+	task.Priority = priority
+
+	return task, nil
+}
+
 // StartHandler is a handler to startCommand
 func (bm *BotManager) StartHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
-		Text:   "Нажмите /settings чтобы настроить расписание",
+		Text: `
+Нажмите /settings чтобы настроить расписание
+Нажмите /tasks чтобы посмотреть свои задачи
+Нажмите /add_task чтобы добавить новую задачу
+Нажмите /generate чтобы сгенерировать дедлайны
+`,
 	})
 	if err != nil {
 		bm.Errorf("%v", err)
 		return
+	}
+
+	user, err := bm.cr.UserByID(ctx, int(update.Message.From.ID))
+	if err != nil {
+		bm.Errorf("%v", err)
+		return
+	}
+
+	if user == nil {
+		_, err = bm.cr.AddUser(ctx, &db.User{
+			ID:       int(update.Message.From.ID),
+			StatusID: db.StatusEnabled,
+		})
+		if err != nil {
+			bm.Errorf("%v", err)
+			return
+		}
 	}
 }
 
@@ -254,6 +366,39 @@ func (bm *BotManager) TasksHandler(ctx context.Context, b *bot.Bot, update *mode
 		bm.Errorf("%v", err)
 		return
 	}
+}
+
+func (bm *BotManager) AddTaskHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: update.Message.Chat.ID,
+		Text: `
+Отправьте задачу в формате
+{Описание}
+{Дата дедлайна DD.MM.YYYY}
+{Длительность в минутах}
+{Приоритет 1-10, выше = важнее}
+
+Пример:
+Сделать ДЗ физика
+07.12.2025
+120
+1
+`,
+	})
+	if err != nil {
+		bm.Errorf("%v", err)
+		return
+	}
+
+	_, err = bm.cr.UpdateUser(ctx, &db.User{
+		ID:       int(update.Message.From.ID),
+		StatusID: db.StatusWaitTask,
+	}, db.WithColumns(db.Columns.User.StatusID))
+	if err != nil {
+		bm.Errorf("%v", err)
+		return
+	}
+
 }
 
 func regenerateSlots(settings *db.UserTimeSlots, dayNumber int, slotNumber int, checked bool) {

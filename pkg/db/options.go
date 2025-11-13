@@ -17,10 +17,12 @@ const (
 	StatusEnabled  = 1
 	StatusDisabled = 2
 	StatusDeleted  = 3
+	StatusWaitTask = 4
 )
 
 var (
 	StatusFilter        = Filter{Field: "statusId", Value: []int{StatusEnabled, StatusDisabled}, SearchType: SearchTypeArray}
+	UserStatusFilter    = Filter{Field: "statusId", Value: []int{StatusEnabled, StatusDisabled, StatusWaitTask}, SearchType: SearchTypeArray}
 	StatusEnabledFilter = Filter{Field: "statusId", Value: []int{StatusEnabled}, SearchType: SearchTypeArray}
 )
 
