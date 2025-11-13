@@ -1,16 +1,12 @@
 package db
 
 type UserTimeSlots struct {
-	WeekDays []WeekDay `json:"weekDays"`
+	// WeekDays represent days of the week from 0 (Sunday) to 6 (Saturday) with array of TimeSlot
+	WeekDays map[int][]TimeSlot `json:"weekDays"`
 }
 
-// WeekDay represents day of the week from 1 (Monday) to 7 (Sunday) with array of TimeSlot
-type WeekDay struct {
-	DayNumber int        `json:"dayNumber"`
-	Slots     []TimeSlot `json:"slots"`
-}
-
-// TimeSlot has id of 1..16, each representing 1 hour slot from 6:00 am to 10:00 pm
+// TimeSlot has StartHour, EndHour of 6..22, each representing 1 hour from 6:00 AM to 10:00 PM,
 type TimeSlot struct {
-	Id int `json:"id"`
+	StartHour int `json:"startHour"`
+	EndHour   int `json:"endHour"`
 }
