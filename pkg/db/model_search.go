@@ -55,15 +55,17 @@ type Searcher interface {
 type TaskSearch struct {
 	search
 
-	ID        *int
-	UserTgID  *int
-	Priority  *int
-	Length    *int
-	Deadline  *time.Time
-	CreatedAt *time.Time
-	StartAt   *time.Time
-	StatusID  *int
-	IDs       []int
+	ID               *int
+	UserTgID         *int
+	Priority         *int
+	Length           *int
+	Deadline         *time.Time
+	CreatedAt        *time.Time
+	StartAt          *time.Time
+	StatusID         *int
+	Description      *string
+	IDs              []int
+	DescriptionILike *string
 }
 
 func (ts *TaskSearch) Apply(query *orm.Query) *orm.Query {
@@ -94,8 +96,14 @@ func (ts *TaskSearch) Apply(query *orm.Query) *orm.Query {
 	if ts.StatusID != nil {
 		ts.where(query, Tables.Task.Alias, Columns.Task.StatusID, ts.StatusID)
 	}
+	if ts.Description != nil {
+		ts.where(query, Tables.Task.Alias, Columns.Task.Description, ts.Description)
+	}
 	if len(ts.IDs) > 0 {
 		Filter{Columns.Task.ID, ts.IDs, SearchTypeArray, false}.Apply(query)
+	}
+	if ts.DescriptionILike != nil {
+		Filter{Columns.Task.Description, *ts.DescriptionILike, SearchTypeILike, false}.Apply(query)
 	}
 
 	ts.apply(query)

@@ -10,7 +10,7 @@ import (
 
 var Columns = struct {
 	Task struct {
-		ID, UserTgID, Priority, Length, Deadline, CreatedAt, StartAt, StatusID string
+		ID, UserTgID, Priority, Length, Deadline, CreatedAt, StartAt, StatusID, Description string
 
 		UserTg string
 	}
@@ -19,18 +19,19 @@ var Columns = struct {
 	}
 }{
 	Task: struct {
-		ID, UserTgID, Priority, Length, Deadline, CreatedAt, StartAt, StatusID string
+		ID, UserTgID, Priority, Length, Deadline, CreatedAt, StartAt, StatusID, Description string
 
 		UserTg string
 	}{
-		ID:        "taskId",
-		UserTgID:  "userTgId",
-		Priority:  "priority",
-		Length:    "length",
-		Deadline:  "deadline",
-		CreatedAt: "createdAt",
-		StartAt:   "startAt",
-		StatusID:  "statusId",
+		ID:          "taskId",
+		UserTgID:    "userTgId",
+		Priority:    "priority",
+		Length:      "length",
+		Deadline:    "deadline",
+		CreatedAt:   "createdAt",
+		StartAt:     "startAt",
+		StatusID:    "statusId",
+		Description: "description",
 
 		UserTg: "UserTg",
 	},
@@ -68,14 +69,15 @@ var Tables = struct {
 type Task struct {
 	tableName struct{} `pg:"tasks,alias:t,discard_unknown_columns"`
 
-	ID        int        `pg:"taskId,pk"`
-	UserTgID  *int       `pg:"userTgId"`
-	Priority  int        `pg:"priority,use_zero"`
-	Length    int        `pg:"length,use_zero"`
-	Deadline  time.Time  `pg:"deadline,use_zero"`
-	CreatedAt time.Time  `pg:"createdAt,use_zero"`
-	StartAt   *time.Time `pg:"startAt"`
-	StatusID  int        `pg:"statusId,use_zero"`
+	ID          int        `pg:"taskId,pk"`
+	UserTgID    *int       `pg:"userTgId"`
+	Priority    int        `pg:"priority,use_zero"`
+	Length      int        `pg:"length,use_zero"`
+	Deadline    time.Time  `pg:"deadline,use_zero"`
+	CreatedAt   time.Time  `pg:"createdAt,use_zero"`
+	StartAt     *time.Time `pg:"startAt"`
+	StatusID    int        `pg:"statusId,use_zero"`
+	Description string     `pg:"description,use_zero"`
 
 	UserTg *User `pg:"fk:userTgId,rel:has-one"`
 }

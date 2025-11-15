@@ -21,7 +21,7 @@ func NewTimetablesRepo(db orm.DB) TimetablesRepo {
 		db: db,
 		filters: map[string][]Filter{
 			Tables.Task.Name: {StatusFilter},
-			Tables.User.Name: {StatusFilter},
+			Tables.User.Name: {UserStatusFilter},
 		},
 		sort: map[string][]SortField{
 			Tables.Task.Name: {{Column: Columns.Task.CreatedAt, Direction: SortDesc}},
