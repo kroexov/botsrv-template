@@ -76,6 +76,8 @@ func (bm *BotManager) RegisterBotHandlers(b *bot.Bot) {
 }
 
 // DefaultHandler is a handler if no match for user call is found
+//
+//nolint:errcheck,govet
 func (bm *BotManager) DefaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	if update.Message == nil {
 		return
@@ -128,6 +130,8 @@ func (bm *BotManager) DefaultHandler(ctx context.Context, b *bot.Bot, update *mo
 }
 
 // ParseTaskFromText parses incoming text message to task
+//
+//nolint:perfsprint,
 func ParseTaskFromText(text string, userTgID int) (*db.Task, error) {
 	lines := strings.Split(strings.TrimSpace(text), "\n")
 
@@ -268,9 +272,9 @@ func (bm *BotManager) ChangeSlotHandler(ctx context.Context, b *bot.Bot, update 
 	if len(data) < 4 {
 		return
 	}
-	userId := int(update.CallbackQuery.From.ID)
+	userID := int(update.CallbackQuery.From.ID)
 
-	settings, err := bm.tm.UserSettings(ctx, userId)
+	settings, err := bm.tm.UserSettings(ctx, userID)
 	if err != nil {
 		bm.Errorf("%v", err)
 		return
@@ -287,7 +291,7 @@ func (bm *BotManager) ChangeSlotHandler(ctx context.Context, b *bot.Bot, update 
 	regenerateSlots(settings, dayNumber, slotNumber, checked)
 
 	_, err = bm.cr.UpdateUser(ctx, &db.User{
-		ID:        userId,
+		ID:        userID,
 		TimeSlots: *settings,
 	}, db.WithColumns(db.Columns.User.TimeSlots))
 	if err != nil {
@@ -434,6 +438,7 @@ func regenerateSlots(settings *db.UserTimeSlots, dayNumber int, slotNumber int, 
 	settings.WeekDays[dayNumber] = res
 }
 
+//nolint:prealloc
 func generateCheckedTimeSlots(settings *db.UserTimeSlots, dayNumber int, slotNumber int, checked bool) []db.TimeSlot {
 	var checkedTimeSlots []db.TimeSlot
 
@@ -458,6 +463,7 @@ func generateCheckedTimeSlots(settings *db.UserTimeSlots, dayNumber int, slotNum
 	return checkedTimeSlots
 }
 
+//nolint:prealloc
 func generateSettingsSlots(settings *db.UserTimeSlots, dayNumber int) models.InlineKeyboardMarkup {
 	var res [][]models.InlineKeyboardButton
 	res = append(res, []models.InlineKeyboardButton{

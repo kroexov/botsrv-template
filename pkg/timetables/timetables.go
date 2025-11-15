@@ -22,8 +22,8 @@ func NewTimeTableManager(dbc db.DB, logger embedlog.Logger) *TimeTableManager {
 
 var ErrNotFound = errors.New("not found")
 
-func (tm *TimeTableManager) GenerateTimeTable(ctx context.Context, userId int) ([]db.Task, error) {
-	user, err := tm.tr.UserByID(ctx, userId)
+func (tm *TimeTableManager) GenerateTimeTable(ctx context.Context, userID int) ([]db.Task, error) {
+	user, err := tm.tr.UserByID(ctx, userID)
 
 	if err != nil {
 		return nil, err
@@ -80,8 +80,8 @@ taskCycle:
 	}
 }
 
-func (tm *TimeTableManager) UserSettings(ctx context.Context, userId int) (*db.UserTimeSlots, error) {
-	user, err := tm.tr.UserByID(ctx, userId)
+func (tm *TimeTableManager) UserSettings(ctx context.Context, userID int) (*db.UserTimeSlots, error) {
+	user, err := tm.tr.UserByID(ctx, userID)
 
 	if err != nil {
 		return nil, err
