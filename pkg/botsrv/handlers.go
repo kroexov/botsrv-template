@@ -141,11 +141,11 @@ func ParseTaskFromText(text string, userTgID int) (*db.Task, error) {
 		StatusID: db.StatusEnabled,
 	}
 
-	// Парсим описание (первая строка)
-	//task.Description = strings.TrimSpace(lines[0])
-	//if task.Description == "" {
-	//	return nil, fmt.Errorf("описание не может быть пустым")
-	//}
+	//Парсим описание (первая строка)
+	task.Description = strings.TrimSpace(lines[0])
+	if task.Description == "" {
+		return nil, fmt.Errorf("описание не может быть пустым")
+	}
 
 	// Парсим дату дедлайна (вторая строка)
 	deadline, err := time.Parse("02.01.2006", strings.TrimSpace(lines[1]))

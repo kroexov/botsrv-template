@@ -23,6 +23,7 @@ var templateFuncs = template.FuncMap{
 
 // Шаблон для одной задачи
 const taskTemplate = `ID: {{.ID}} 
+Описание: {{.Description}}  
 Приоритет: {{.Priority}} 
 Займет: {{.Length}} минут 
 Дедлайн: {{formatTime .Deadline}} 
