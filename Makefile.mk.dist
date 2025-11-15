@@ -1,10 +1,10 @@
 # project service name
-NAME := gold-botsrv
+NAME := timetables
 
 # local database connection settings
-TEST_PGDATABASE ?= test-gold-botsrv
+TEST_PGDATABASE ?= demo
 
-PGDATABASE ?= gold-botsrv
+PGDATABASE ?= demo
 PGHOST ?= localhost
 PGPORT ?= 5432
 PGUSER ?= postgres
