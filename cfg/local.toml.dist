@@ -6,7 +6,7 @@ IsDevel   = true
 [Database]
 Addr            = "localhost:5432"
 User            = "postgres"
-Database        = "gold-botsrv"
+Database        = "demo"
 Password        = ""
 PoolSize        = 5
 ApplicationName = "gold-botsrv"
