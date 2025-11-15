@@ -268,7 +268,6 @@ func (bm *BotManager) ChangeSlotHandler(ctx context.Context, b *bot.Bot, update 
 	if len(data) < 4 {
 		return
 	}
-
 	userId := int(update.CallbackQuery.From.ID)
 
 	settings, err := bm.tm.UserSettings(ctx, userId)
@@ -279,17 +278,7 @@ func (bm *BotManager) ChangeSlotHandler(ctx context.Context, b *bot.Bot, update 
 		return
 	}
 
-	dayNumber, err := strconv.Atoi(data[1])
-	if err != nil {
-		bm.Errorf("%v", err)
-		return
-	}
-	slotNumber, err := strconv.Atoi(data[2])
-	if err != nil {
-		bm.Errorf("%v", err)
-		return
-	}
-	checked, err := strconv.ParseBool(data[3])
+	dayNumber, slotNumber, checked, err := parseParams(data)
 	if err != nil {
 		bm.Errorf("%v", err)
 		return
@@ -315,6 +304,22 @@ func (bm *BotManager) ChangeSlotHandler(ctx context.Context, b *bot.Bot, update 
 		bm.Errorf("%v", err)
 		return
 	}
+}
+
+func parseParams(data []string) (int, int, bool, error) {
+	dayNumber, err := strconv.Atoi(data[1])
+	if err != nil {
+		return 0, 0, false, err
+	}
+	slotNumber, err := strconv.Atoi(data[2])
+	if err != nil {
+		return 0, 0, false, err
+	}
+	checked, err := strconv.ParseBool(data[3])
+	if err != nil {
+		return 0, 0, false, err
+	}
+	return dayNumber, slotNumber, checked, nil
 }
 
 func (bm *BotManager) GenerateHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -401,26 +406,7 @@ func regenerateSlots(settings *db.UserTimeSlots, dayNumber int, slotNumber int, 
 		settings.WeekDays = make(map[int][]db.TimeSlot)
 	}
 
-	var checkedTimeSlots []db.TimeSlot
-
-	for _, slot := range settings.WeekDays[dayNumber] {
-		for i := slot.StartHour; i < slot.EndHour; i++ {
-			if i == slotNumber && checked {
-				continue
-			}
-			checkedTimeSlots = append(checkedTimeSlots, db.TimeSlot{
-				StartHour: i,
-				EndHour:   i + 1,
-			})
-		}
-	}
-
-	if !checked {
-		checkedTimeSlots = append(checkedTimeSlots, db.TimeSlot{
-			StartHour: slotNumber,
-			EndHour:   slotNumber + 1,
-		})
-	}
+	checkedTimeSlots := generateCheckedTimeSlots(settings, dayNumber, slotNumber, checked)
 
 	slices.SortFunc(checkedTimeSlots, func(a, b db.TimeSlot) int {
 		return a.StartHour - b.StartHour
@@ -447,6 +433,30 @@ func regenerateSlots(settings *db.UserTimeSlots, dayNumber int, slotNumber int, 
 	res = append(res, current)
 
 	settings.WeekDays[dayNumber] = res
+}
+
+func generateCheckedTimeSlots(settings *db.UserTimeSlots, dayNumber int, slotNumber int, checked bool) []db.TimeSlot {
+	var checkedTimeSlots []db.TimeSlot
+
+	for _, slot := range settings.WeekDays[dayNumber] {
+		for i := slot.StartHour; i < slot.EndHour; i++ {
+			if i == slotNumber && checked {
+				continue
+			}
+			checkedTimeSlots = append(checkedTimeSlots, db.TimeSlot{
+				StartHour: i,
+				EndHour:   i + 1,
+			})
+		}
+	}
+
+	if !checked {
+		checkedTimeSlots = append(checkedTimeSlots, db.TimeSlot{
+			StartHour: slotNumber,
+			EndHour:   slotNumber + 1,
+		})
+	}
+	return checkedTimeSlots
 }
 
 func generateSettingsSlots(settings *db.UserTimeSlots, dayNumber int) models.InlineKeyboardMarkup {
