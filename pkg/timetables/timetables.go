@@ -21,7 +21,6 @@ func NewTimeTableManager(dbc db.DB, logger embedlog.Logger) *TimeTableManager {
 var ErrNotFound = errors.New("not found")
 
 func (tm *TimeTableManager) GenerateTimeTable(ctx context.Context, userId int) ([]db.Task, error) {
-
 	user, err := tm.tr.UserByID(ctx, userId)
 
 	if err != nil {
@@ -42,6 +41,23 @@ func (tm *TimeTableManager) GenerateTimeTable(ctx context.Context, userId int) (
 
 	timeTable := User(*user).TimeTable()
 
+	setTasksStartTime(tasks, timeTable)
+
+	for i, task := range tasks {
+		if task.StartAt == nil {
+			tasks[i].StatusID = db.StatusDisabled
+		}
+		_, err = tm.tr.UpdateTask(ctx, &task,
+			db.WithColumns(db.Columns.Task.StartAt, db.Columns.Task.StatusID))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return tasks, nil
+}
+
+func setTasksStartTime(tasks []db.Task, timeTable []TimeSlot) {
 taskCycle:
 	for i, task := range tasks {
 		for j := 0; j <= len(timeTable)-1; j++ {
@@ -60,19 +76,6 @@ taskCycle:
 			}
 		}
 	}
-
-	for i, task := range tasks {
-		if task.StartAt == nil {
-			tasks[i].StatusID = db.StatusDisabled
-		}
-		_, err = tm.tr.UpdateTask(ctx, &task,
-			db.WithColumns(db.Columns.Task.StartAt, db.Columns.Task.StatusID))
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return tasks, nil
 }
 
 func (tm *TimeTableManager) UserSettings(ctx context.Context, userId int) (*db.UserTimeSlots, error) {
