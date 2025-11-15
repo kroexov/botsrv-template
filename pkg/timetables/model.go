@@ -1,12 +1,11 @@
 package timetables
 
 import (
-	"gold-botsrv/pkg/db"
 	"slices"
 	"time"
-)
 
-const timeSlotIncrement = 6
+	"gold-botsrv/pkg/db"
+)
 
 type Task db.Task
 

@@ -3,9 +3,10 @@ package botsrv
 import (
 	"bytes"
 	"fmt"
-	"gold-botsrv/pkg/db"
 	"text/template"
 	"time"
+
+	"gold-botsrv/pkg/db"
 )
 
 var templateFuncs = template.FuncMap{

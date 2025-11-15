@@ -3,9 +3,11 @@ package timetables
 import (
 	"context"
 	"errors"
-	"github.com/vmkteam/embedlog"
-	"gold-botsrv/pkg/db"
 	"time"
+
+	"gold-botsrv/pkg/db"
+
+	"github.com/vmkteam/embedlog"
 )
 
 type TimeTableManager struct {

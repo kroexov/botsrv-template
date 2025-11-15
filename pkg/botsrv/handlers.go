@@ -3,7 +3,6 @@ package botsrv
 import (
 	"context"
 	"fmt"
-	"gold-botsrv/pkg/timetables"
 	"slices"
 	"strconv"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"gold-botsrv/pkg/db"
+	"gold-botsrv/pkg/timetables"
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -398,7 +398,6 @@ func (bm *BotManager) AddTaskHandler(ctx context.Context, b *bot.Bot, update *mo
 		bm.Errorf("%v", err)
 		return
 	}
-
 }
 
 func regenerateSlots(settings *db.UserTimeSlots, dayNumber int, slotNumber int, checked bool) {
