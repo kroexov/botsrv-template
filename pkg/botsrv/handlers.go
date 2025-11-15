@@ -494,6 +494,7 @@ func generateSettingsSlots(settings *db.UserTimeSlots, dayNumber int) models.Inl
 	return models.InlineKeyboardMarkup{InlineKeyboard: res}
 }
 
+// nolint:prealloc
 func generateSettingsDays() models.InlineKeyboardMarkup {
 	var res [][]models.InlineKeyboardButton
 	for i := range 7 {
