@@ -127,11 +127,10 @@ func (bm *BotManager) DefaultHandler(ctx context.Context, b *bot.Bot, update *mo
 	}
 }
 
-// ParseTaskFromText парсит текст в структуру Task
+// ParseTaskFromText parses incoming text message to task
 func ParseTaskFromText(text string, userTgID int) (*db.Task, error) {
 	lines := strings.Split(strings.TrimSpace(text), "\n")
 
-	// Должно быть 4 строки: описание, дата, длительность, приоритет
 	if len(lines) < 4 {
 		return nil, fmt.Errorf("неверный формат. Ожидается 4 строки, получено %d", len(lines))
 	}
@@ -141,20 +140,17 @@ func ParseTaskFromText(text string, userTgID int) (*db.Task, error) {
 		StatusID: db.StatusEnabled,
 	}
 
-	//Парсим описание (первая строка)
 	task.Description = strings.TrimSpace(lines[0])
 	if task.Description == "" {
 		return nil, fmt.Errorf("описание не может быть пустым")
 	}
 
-	// Парсим дату дедлайна (вторая строка)
 	deadline, err := time.Parse("02.01.2006", strings.TrimSpace(lines[1]))
 	if err != nil {
 		return nil, fmt.Errorf("неверный формат даты. Ожидается DD.MM.YYYY: %w", err)
 	}
 	task.Deadline = deadline
 
-	// Парсим длительность (третья строка)
 	length, err := strconv.Atoi(strings.TrimSpace(lines[2]))
 	if err != nil {
 		return nil, fmt.Errorf("неверный формат длительности. Ожидается число минут: %w", err)
@@ -164,7 +160,6 @@ func ParseTaskFromText(text string, userTgID int) (*db.Task, error) {
 	}
 	task.Length = length
 
-	// Парсим приоритет (четвертая строка)
 	priority, err := strconv.Atoi(strings.TrimSpace(lines[3]))
 	if err != nil {
 		return nil, fmt.Errorf("неверный формат приоритета. Ожидается число 1-10: %w", err)
